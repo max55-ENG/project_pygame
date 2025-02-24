@@ -52,18 +52,18 @@ shoot_sound = pygame.mixer.Sound("shoot.mp3")
 explosion_sound = pygame.mixer.Sound("explosion.mp3")
 pygame.mixer.music.load("background_music.mp3")
 
-# Параметры уровнейd
+# Параметры уровней
 levels = {
     1: {'speed_min_a': 3, 'speed_max_a': 7, 'speed_min_e': 4, 'speed_max_e': 6,
         'hp': 20, 'asteroid_score': 5, 'enemy_score': 10},
     2: {'speed_min_a': 4, 'speed_max_a': 8, 'speed_min_e': 5, 'speed_max_e': 7,
-        'hp': 30, 'asteroid_score': 7, 'enemy_score': 15},
+        'hp': 35, 'asteroid_score': 7, 'enemy_score': 15},
     3: {'speed_min_a': 5, 'speed_max_a': 9, 'speed_min_e': 6, 'speed_max_e': 8,
-        'hp': 40, 'asteroid_score': 10, 'enemy_score': 20},
+        'hp': 45, 'asteroid_score': 10, 'enemy_score': 20},
     4: {'speed_min_a': 6, 'speed_max_a': 10, 'speed_min_e': 7, 'speed_max_e': 9,
-        'hp': 50, 'asteroid_score': 12, 'enemy_score': 25},
+        'hp': 55, 'asteroid_score': 12, 'enemy_score': 25},
     5: {'speed_min_a': 7, 'speed_max_a': 11, 'speed_min_e': 8, 'speed_max_e': 10,
-        'hp': 60, 'asteroid_score': 15, 'enemy_score': 30, 'infinite': True},
+        'hp': 65, 'asteroid_score': 15, 'enemy_score': 30, 'infinite': True},
 }
 
 upgrades = {
@@ -72,13 +72,11 @@ upgrades = {
     'damage': {'level': 0, 'cost': 180, 'max_level': 5}
 }
 
-# Глобальные переменные прогресса
 unlocked_levels = 1
 stars = 0
-current_user = None  # Добавляем переменную для хранения текущего пользователя
+current_user = None
 pygame.mixer.music.play(-1)
 pygame.mixer.music.set_volume(1)
-
 
 
 class Player(pygame.sprite.Sprite):
@@ -87,8 +85,8 @@ class Player(pygame.sprite.Sprite):
         self.image = player_img
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH // 2, HEIGHT - 60)
-        self.max_health = 100 + 10 * upgrades['health']['level']  # Максимальное здоровье с улучшениями
-        self.health = self.max_health  # Текущее здоровье
+        self.max_health = 100 + 10 * upgrades['health']['level']
+        self.health = self.max_health
         self.speed = 5 + upgrades['speed']['level']
         self.score = 0
         self.current_level = current_level
@@ -148,7 +146,6 @@ class Enemy(pygame.sprite.Sprite):
             spawn_enemy()
 
     def take_damage(self):
-        # Используем только урон пуль без дополнительного amount
         self.health -= Bullet.damage
         if self.health <= 0:
             score = levels[self.player.current_level]['enemy_score']
@@ -190,7 +187,7 @@ class Bullet(pygame.sprite.Sprite):
         self.image.fill(RED)
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
-        self.speed = -10  # Фиксированная скорость
+        self.speed = -10
 
     def update(self):
         self.rect.y += self.speed
@@ -218,7 +215,7 @@ def spawn_enemy():
         level_params['speed_min_e'],
         level_params['speed_max_e'],
         level_params['hp'],
-        player  # Передаем текущего игрока
+        player
     )
     all_sprites.add(enemy)
     enemies.add(enemy)
@@ -303,7 +300,7 @@ def game_screen(level):
     all_sprites.add(player)
     level_params = levels[level]
 
-    game_duration = 1 if level != 5 else float('inf')
+    game_duration = 90 if level != 5 else float('inf')
     infinite_mode = level == 5
 
     for _ in range(8):
@@ -343,7 +340,7 @@ def game_screen(level):
             if player.health <= 30:
                 spawn_bonus()
 
-        if int(elapsed_time) == 5 and flag_bonus:
+        if int(elapsed_time) == 45 and flag_bonus:
             spawn_bonus()
             flag_bonus = False
 
@@ -369,7 +366,7 @@ def game_screen(level):
         for bullet in bullets:
             for enemy in enemies:
                 if bullet.rect.colliderect(enemy.rect):
-                    enemy.take_damage()  # Убрали параметр 10
+                    enemy.take_damage()
                     bullet.kill()
                     break
 
@@ -382,7 +379,7 @@ def game_screen(level):
         pygame.draw.rect(screen, RED, (10, 10, hp_lvl, 20))
         pygame.draw.rect(screen, GREEN, (10, 10, player.health, 20))
         font = pygame.font.SysFont(None, 36)
-        score_text = font.render(f"Очки: {player.score}", True, WHITE)
+        score_text = font.render(f"Монеты: {player.score}", True, WHITE)
         screen.blit(score_text, (WIDTH - 150, 10))
 
         if infinite_mode:
@@ -429,10 +426,10 @@ def show_results(player, elapsed_time, survived, level):
             f"Уничтожено астероидов: {player.asteroids_destroyed}",
             f"Уничтожено врагов: {player.enemies_destroyed}",
             f"Время: {int(elapsed_time)} сек" if level == 5 else f"Осталось времени: {int(elapsed_time)} сек",
-            f"Звезды: {player.score}",
+            f"Монеты: {player.score}",
         ]
 
-        # Добавляем рекорд для 5 уровня
+        #рекорд для 5 уровня
         if level == 5:
             results.insert(2, f"Рекорд: {load_high_score()} сек")
 
@@ -512,7 +509,7 @@ def shop_screen():
         speed_level = upgrades['speed']['level']
         speed_cost = upgrades['speed']['cost']
         speed_color = LIGHT_BLUE if speed_level < 5 and stars >= speed_cost else GRAY
-        speed_button = draw_button(f"Скорость {speed_level + 1} ({speed_cost}★)",
+        speed_button = draw_button(f"Скорость {speed_level + 1} ({speed_cost})",
                                    WIDTH // 2 - 175, 150, 350, 50, speed_color, DARK_BLUE)
         if speed_level >= 5:
             max_text = font.render("MAX", True, RED)
@@ -522,7 +519,7 @@ def shop_screen():
         health_level = upgrades['health']['level']
         health_cost = upgrades['health']['cost']
         health_color = LIGHT_BLUE if health_level < 5 and stars >= health_cost else GRAY
-        health_button = draw_button(f"Здоровье {health_level + 1} ({health_cost}★)",
+        health_button = draw_button(f"Здоровье {health_level + 1} ({health_cost})",
                                     WIDTH // 2 - 175, 220, 350, 50, health_color, DARK_BLUE)
         if health_level >= 5:
             max_text = font.render("MAX", True, RED)
@@ -532,7 +529,7 @@ def shop_screen():
         damage_level = upgrades['damage']['level']
         damage_cost = upgrades['damage']['cost']
         damage_color = LIGHT_BLUE if damage_level < 5 and stars >= damage_cost else GRAY
-        damage_button = draw_button(f"Урон {damage_level + 1} ({damage_cost}★)",
+        damage_button = draw_button(f"Урон {damage_level + 1} ({damage_cost})",
                                     WIDTH // 2 - 175, 290, 350, 50, damage_color, DARK_BLUE)
         if damage_level >= 5:
             max_text = font.render("MAX", True, RED)
@@ -540,7 +537,7 @@ def shop_screen():
 
         back_button = draw_button("Назад", WIDTH // 2 - 75, 400, 150, 50, LIGHT_BLUE, DARK_BLUE)
 
-        score_text = font.render(f"Ваши звезды: {stars}★", True, WHITE)
+        score_text = font.render(f"Ваши монеты: {stars}", True, WHITE)
         screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, 500))
 
         pygame.display.flip()
@@ -555,19 +552,19 @@ def shop_screen():
                 elif speed_button.collidepoint(pygame.mouse.get_pos()) and speed_level < 5 and stars >= speed_cost:
                     stars -= speed_cost
                     upgrades['speed']['level'] += 1
-                    upgrades['speed']['cost'] += 50  # Увеличиваем стоимость
-                    player.speed += 1  # Применяем улучшение
+                    upgrades['speed']['cost'] += 50
+                    player.speed += 1
                 elif health_button.collidepoint(pygame.mouse.get_pos()) and health_level < 5 and stars >= health_cost:
                     stars -= health_cost
                     upgrades['health']['level'] += 1
                     upgrades['health']['cost'] += 50
-                    player.max_health += 10  # Увеличиваем максимальное здоровье
+                    player.max_health += 10
                     player.health = player.max_health
                 elif damage_button.collidepoint(pygame.mouse.get_pos()) and damage_level < 5 and stars >= damage_cost:
                     stars -= damage_cost
                     upgrades['damage']['level'] += 1
                     upgrades['damage']['cost'] += 50
-                    Bullet.damage += 2  # Добавляем свойство урона пулям
+                    Bullet.damage += 3
 
 
 def main_menu():
@@ -578,7 +575,7 @@ def main_menu():
         fon = pygame.transform.scale(load_image("background.jpg"), SIZE)
         screen.blit(fon, (0, 0))
 
-        # Кнопка входа/пользователя
+        # Кнопка входа пользователя
         if current_user:
             user_nik = pygame.draw.rect(screen, LIGHT_BLUE, (WIDTH - 180, 20, 160, 40))
             label_us = font.render(current_user, True, WHITE)
@@ -590,13 +587,13 @@ def main_menu():
             label_rec = font.render(f"Ваш рекорд - {rec} сек", True, WHITE)
             user_rec = pygame.draw.rect(screen, LIGHT_BLUE, (50, 50, 300, 40))
             screen.blit(label_rec, (user_rec.x + (user_rec.width - label_rec.get_width()) // 2,
-                                   user_rec.y + (user_rec.height - label_rec.get_height()) // 2))
+                                    user_rec.y + (user_rec.height - label_rec.get_height()) // 2))
 
             user_button = draw_button("Выйти", WIDTH - 180, 70, 160, 40, LIGHT_BLUE, DARK_BLUE)
         else:
             user_button = draw_button("Войти", WIDTH - 180, 20, 160, 40, LIGHT_BLUE, DARK_BLUE)
 
-        # Остальные кнопки
+        # кнопки главного меню
         play_button = draw_button("Играть", WIDTH // 2 - 100, HEIGHT // 2 - 100, 200, 50, LIGHT_BLUE, DARK_BLUE)
         shop_button = draw_button("Магазин", WIDTH // 2 - 100, HEIGHT // 2, 200, 50, LIGHT_BLUE, DARK_BLUE)
         settings_button = draw_button("Настройки", WIDTH // 2 - 100, HEIGHT // 2 + 60, 200, 50, LIGHT_BLUE, DARK_BLUE)
@@ -633,14 +630,13 @@ def settings_screen():
     music_volume = pygame.mixer.music.get_volume()
     sound_volume = shoot_sound.get_volume()
 
-    # Позиции слайдеров
+    # Позиции
     music_slider_x = WIDTH // 2 - 100
     sound_slider_x = WIDTH // 2 - 100
     slider_y = 150
     slider_width = 200
     slider_height = 20
 
-    # Флаги для отслеживания активного слайдера
     music_slider_active = False
     sound_slider_active = False
 
@@ -664,7 +660,7 @@ def settings_screen():
         pygame.draw.rect(screen, LIGHT_BLUE,
                          (sound_slider_x, slider_y + 100, int(sound_volume * slider_width), slider_height))
 
-        # Кнопка "Назад"
+        # Кнопка назад
         back_button = draw_button("Назад", WIDTH // 2 - 75, 400, 150, 50, LIGHT_BLUE, DARK_BLUE)
 
         pygame.display.flip()
@@ -689,16 +685,15 @@ def settings_screen():
                 music_slider_active = False
                 sound_slider_active = False
             elif event.type == pygame.MOUSEMOTION:
-                # Если зажата кнопка мыши и курсор находится над слайдером, изменяем громкость
                 if music_slider_active:
                     mouse_x = pygame.mouse.get_pos()[0]
                     music_volume = (mouse_x - music_slider_x) / slider_width
-                    music_volume = max(0, min(1, music_volume))  # Ограничиваем значение от 0 до 1
+                    music_volume = max(0, min(1, music_volume))
                     pygame.mixer.music.set_volume(music_volume)
                 if sound_slider_active:
                     mouse_x = pygame.mouse.get_pos()[0]
                     sound_volume = (mouse_x - sound_slider_x) / slider_width
-                    sound_volume = max(0, min(1, sound_volume))  # Ограничиваем значение от 0 до 1
+                    sound_volume = max(0, min(1, sound_volume))
                     shoot_sound.set_volume(sound_volume)
                     explosion_sound.set_volume(sound_volume)
 
